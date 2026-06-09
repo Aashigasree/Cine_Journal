@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie & Show English Journal</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --border: #e0ddd6;
+    --border2: #ccc9c0;
+    --text: #1a1a18;
+    --muted: #6b6960;
+    --hint: #a09d94;
+    --green: #3b6d11;
+    --green-light: #eaf3de;
+    --green-mid: #639922;
+    --purple: #534ab7;
+    --purple-light: #eeedfe;
+    --amber: #ba7517;
+    --amber-light: #faeeda;
+    --red: #a32d2d;
+    --red-light: #fcebeb;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --card: #232320;
+      --border: #35342f;
+      --border2: #4a4940;
+      --text: #e8e6de;
+      --muted: #9c9a90;
+      --hint: #6b6960;
+      --green: #97c459;
+      --green-light: #1a2a0a;
+      --green-mid: #639922;
+      --purple: #afa9ec;
+      --purple-light: #1a1830;
+      --amber: #ef9f27;
+      --amber-light: #2a1e08;
+      --red: #f09595;
+      --red-light: #2a0f0f;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--green);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-logo span { font-size: 18px; }
+  .btn {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--card);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn:hover { background: var(--bg); }
+  .btn-primary {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+  .btn-primary:hover { opacity: 0.9; background: var(--green); }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; max-width: 700px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+
+  /* HOME PAGE */
+  .home-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--card);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--hint);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filters select {
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--card);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-box {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 700; color: var(--green); }
+  .stat-label { font-size: 12px; color: var(--muted); }
+  .entry-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .entry-card:hover { border-color: var(--border2); }
+  .entry-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    background: var(--green-light);
+  }
+  .entry-main { flex: 1; min-width: 0; }
+  .entry-title { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+  .entry-meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-en { background: var(--purple-light); color: var(--purple); }
+  .badge-ta { background: var(--amber-light); color: var(--amber); }
+  .badge-hi { background: var(--green-light); color: var(--green); }
+  .badge-other { background: var(--border); color: var(--muted); }
+  .stars-display { color: #ef9f27; font-size: 13px; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+
+  /* FORM PAGE */
+  .form-section { margin-bottom: 20px; }
+  .form-section h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .field { margin-bottom: 14px; }
+  label.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  input[type="text"], textarea, select {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--card);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--green-mid);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  .hint { font-size: 12px; color: var(--hint); margin-top: 4px; }
+  .star-picker { display: flex; gap: 6px; margin-top: 4px; }
+  .star-btn {
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--border2);
+    border: none;
+    background: none;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.1s;
+  }
+  .star-btn.on { color: #ef9f27; }
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* VIEW PAGE */
+  .view-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .view-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-sm);
+    background: var(--green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .view-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .view-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .view-section { margin-bottom: 18px; }
+  .view-section h4 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--hint);
+    margin-bottom: 6px;
+  }
+  .view-section p { font-size: 15px; line-height: 1.7; color: var(--text); }
+  .view-section .empty-field { color: var(--hint); font-style: italic; }
+  .vocab-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .vocab-item:last-child { border-bottom: none; }
+  .copy-box {
+    background: var(--green-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 20px;
+  }
+  .copy-box p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+  .view-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+  .btn-danger { border-color: var(--red); color: var(--red); }
+  .btn-danger:hover { background: var(--red-light); }
+
+  /* PAGE TITLE */
+  .page-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .form-row, .form-row3 { grid-template-columns: 1fr; }
+    .stats-row { gap: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>🎬</span> CineJournal</div>
+  <button class="btn" onclick="showPage('home')" id="nav-home">All entries</button>
+  <button class="btn btn-primary" onclick="showPage('form'); resetForm()">+ New entry</button>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+  <div class="stats-row" id="stats-row"></div>
+  <div class="home-header">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search by title..." oninput="renderEntries()">
+    </div>
+  </div>
+  <div class="filters">
+    <select id="filter-lang" onchange="renderEntries()">
+      <option value="">All languages</option>
+      <option value="English">English</option>
+      <option value="Tamil">Tamil</option>
+      <option value="Hindi">Hindi</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="filter-type" onchange="renderEntries()">
+      <option value="">All types</option>
+      <option value="Movie">Movie</option>
+      <option value="Series">Series</option>
+      <option value="Episode">Episode</option>
+      <option value="Documentary">Documentary</option>
+    </select>
+    <select id="sort-by" onchange="renderEntries()">
+      <option value="date-desc">Newest first</option>
+      <option value="date-asc">Oldest first</option>
+      <option value="rating-desc">Highest rated</option>
+      <option value="title-asc">A → Z</option>
+    </select>
+  </div>
+  <div id="entries-list"></div>
+</div>
+
+<!-- ADD / EDIT FORM PAGE -->
+<div id="page-form" class="page">
+  <div class="page-title" id="form-title">📝 New entry</div>
+  <input type="hidden" id="edit-id">
+
+  <div class="card">
+    <div class="form-section">
+      <h3>Basic info</h3>
+      <div class="form-row">
+        <div class="field">
+          <label class="field-label">Title *</label>
+          <input type="text" id="f-title" placeholder="e.g. The Dark Knight">
+        </div>
+        <div class="field">
+          <label class="field-label">Language</label>
+          <select id="f-lang">
+            <option value="English">English</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row3">
+        <div class="field">
+          <label class="field-label">Type</label>
+          <select id="f-type">
+            <option>Movie</option>
+            <option>Series</option>
+            <option>Episode</option>
+            <option>Documentary</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Genre</label>
+          <input type="text" id="f-genre" placeholder="e.g. Thriller">
+        </div>
+        <div class="field">
+          <label class="field-label">Date watched</label>
+          <input type="text" id="f-date" placeholder="e.g. 9 June 2026">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Your rating</label>
+        <div class="star-picker" id="star-picker">
+          <button class="star-btn" data-v="1" onclick="setRating(1)">★</button>
+          <button class="star-btn" data-v="2" onclick="setRating(2)">★</button>
+          <button class="star-btn" data-v="3" onclick="setRating(3)">★</button>
+          <button class="star-btn" data-v="4" onclick="setRating(4)">★</button>
+          <button class="star-btn" data-v="5" onclick="setRating(5)">★</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="form-section">
+      <h3>Your writing (in English)</h3>
+      <div class="field">
+        <label class="field-label">Plot summary — in your own words</label>
+        <textarea id="f-plot" rows="4" placeholder="Write what the movie/episode was about. Don't copy from Google — use your own words!"></textarea>
+        <p class="hint">This is the most important part for improving your English.</p>
+      </div>
+      <div class="field">
+        <label class="field-label">Your opinion &amp; reaction</label>
+        <textarea id="f-opinion" rows="3" placeholder="What did you like or dislike? How did it make you feel?"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="form-section">
+      <h3>Vocabulary &amp; phrases</h3>
+      <div class="field">
+        <label class="field-label">New English words you noticed</label>
+        <textarea id="f-words" rows="3" placeholder="Word — meaning — example sentence&#10;e.g. redemption — being saved from a bad past — &quot;His redemption arc was powerful.&quot;"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Useful phrase or dialogue</label>
+        <textarea id="f-phrase" rows="2" placeholder='e.g. "Could this BE any more obvious?" — sarcastic emphasis'></textarea>
+        <p class="hint">Especially useful for Friends / sitcoms — one good phrase per episode adds up fast!</p>
+      </div>
+      <div class="field">
+        <label class="field-label">What I want to improve next time</label>
+        <input type="text" id="f-improve" placeholder="e.g. I want to use more descriptive adjectives next time">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" onclick="saveEntry()">💾 Save entry</button>
+    <button class="btn" onclick="showPage('home')">Cancel</button>
+  </div>
+</div>
+
+<!-- VIEW PAGE -->
+<div id="page-view" class="page">
+  <div class="view-actions">
+    <button class="btn" onclick="showPage('home')">← Back</button>
+    <button class="btn" id="btn-edit" onclick="editEntry()">✏️ Edit</button>
+    <button class="btn btn-danger" onclick="deleteEntry()">🗑 Delete</button>
+  </div>
+  <div id="view-content"></div>
+</div>
+
+<script>
+let currentRating = 0;
+let currentViewId = null;
+const STORAGE_KEY = 'cinejournal_entries';
+
+function getEntries() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveEntries(entries) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'home') renderEntries();
+}
+
+function setRating(v) {
+  currentRating = v;
+  document.querySelectorAll('.star-btn').forEach(b => {
+    b.classList.toggle('on', +b.dataset.v <= v);
+  });
+}
+
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('form-title').textContent = '📝 New entry';
+  ['f-title','f-lang','f-type','f-genre','f-date','f-plot','f-opinion','f-words','f-phrase','f-improve'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  currentRating = 0;
+  setRating(0);
+}
+
+function saveEntry() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { alert('Please enter a title!'); return; }
+
+  const entries = getEntries();
+  const editId = document.getElementById('edit-id').value;
+
+  const entry = {
+    id: editId || Date.now().toString(),
+    title,
+    lang: document.getElementById('f-lang').value,
+    type: document.getElementById('f-type').value,
+    genre: document.getElementById('f-genre').value.trim(),
+    date: document.getElementById('f-date').value.trim(),
+    rating: currentRating,
+    plot: document.getElementById('f-plot').value.trim(),
+    opinion: document.getElementById('f-opinion').value.trim(),
+    words: document.getElementById('f-words').value.trim(),
+    phrase: document.getElementById('f-phrase').value.trim(),
+    improve: document.getElementById('f-improve').value.trim(),
+    savedAt: new Date().toISOString()
+  };
+
+  if (editId) {
+    const idx = entries.findIndex(e => e.id === editId);
+    if (idx > -1) entries[idx] = entry;
+  } else {
+    entries.unshift(entry);
+  }
+
+  saveEntries(entries);
+  showPage('home');
+}
+
+function editEntry() {
+  const entry = getEntries().find(e => e.id === currentViewId);
+  if (!entry) return;
+  document.getElementById('edit-id').value = entry.id;
+  document.getElementById('form-title').textContent = '✏️ Edit entry';
+  document.getElementById('f-title').value = entry.title || '';
+  document.getElementById('f-lang').value = entry.lang || 'English';
+  document.getElementById('f-type').value = entry.type || 'Movie';
+  document.getElementById('f-genre').value = entry.genre || '';
+  document.getElementById('f-date').value = entry.date || '';
+  document.getElementById('f-plot').value = entry.plot || '';
+  document.getElementById('f-opinion').value = entry.opinion || '';
+  document.getElementById('f-words').value = entry.words || '';
+  document.getElementById('f-phrase').value = entry.phrase || '';
+  document.getElementById('f-improve').value = entry.improve || '';
+  currentRating = entry.rating || 0;
+  setRating(currentRating);
+  showPage('form');
+}
+
+function deleteEntry() {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  const entries = getEntries().filter(e => e.id !== currentViewId);
+  saveEntries(entries);
+  showPage('home');
+}
+
+function viewEntry(id) {
+  const entry = getEntries().find(e => e.id === id);
+  if (!entry) return;
+  currentViewId = id;
+
+  const stars = entry.rating ? '★'.repeat(entry.rating) + '☆'.repeat(5 - entry.rating) : 'No rating';
+  const badgeClass = { English:'badge-en', Tamil:'badge-ta', Hindi:'badge-hi' }[entry.lang] || 'badge-other';
+  const emoji = { Movie:'🎬', Series:'📺', Episode:'📺', Documentary:'🎥' }[entry.type] || '🎬';
+
+  function section(title, content) {
+    const isEmpty = !content || !content.trim();
+    return `<div class="view-section">
+      <h4>${title}</h4>
+      ${isEmpty ? '<p class="empty-field">Not filled in</p>' : '<p>' + content.replace(/\n/g, '<br>') + '</p>'}
+    </div>`;
+  }
+
+  document.getElementById('view-content').innerHTML = `
+    <div class="card">
+      <div class="view-header">
+        <div class="view-thumb">${emoji}</div>
+        <div>
+          <div class="view-title">${entry.title}</div>
+          <div class="view-badges">
+            <span class="badge ${badgeClass}">${entry.lang}</span>
+            <span class="badge badge-other">${entry.type}</span>
+            ${entry.genre ? '<span class="badge badge-other">' + entry.genre + '</span>' : ''}
+            <span class="stars-display">${stars}</span>
+          </div>
+          ${entry.date ? '<div style="font-size:13px;color:var(--muted);margin-top:4px">📅 ' + entry.date + '</div>' : ''}
+        </div>
+      </div>
+      ${section('Plot summary', entry.plot)}
+      ${section('Opinion & reaction', entry.opinion)}
+      ${section('New words', entry.words)}
+      ${section('Useful phrase', entry.phrase)}
+      ${section('What to improve', entry.improve)}
+    </div>
+    <div class="copy-box">
+      <p>📋 Copy this entry and paste it in Claude to get instant grammar feedback:</p>
+      <button class="btn btn-primary" onclick="copyToClipboard()">Copy entry text</button>
+    </div>`;
+
+  showPage('view');
+}
+
+function copyToClipboard() {
+  const entry = getEntries().find(e => e.id === currentViewId);
+  if (!entry) return;
+  const stars = entry.rating ? '★'.repeat(entry.rating) : '—';
+  const text = `🎬 MOVIE / SHOW JOURNAL ENTRY
+Title: ${entry.title || '—'}
+Language: ${entry.lang} | Type: ${entry.type} | Genre: ${entry.genre || '—'}
+Date watched: ${entry.date || '—'} | Rating: ${stars}
+
+PLOT SUMMARY:
+${entry.plot || '(not filled)'}
+
+MY OPINION:
+${entry.opinion || '(not filled)'}
+
+NEW WORDS:
+${entry.words || '(none noted)'}
+
+USEFUL PHRASE:
+${entry.phrase || '(none noted)'}
+
+WHAT I WANT TO IMPROVE:
+${entry.improve || '(not filled)'}
+
+---
+Please check my English in this journal entry. Correct any grammar mistakes, suggest better vocabulary where possible, and tell me what I did well and what to improve.`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = 'Copy entry text', 2000);
+  });
+}
+
+function renderEntries() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const lang = document.getElementById('filter-lang').value;
+  const type = document.getElementById('filter-type').value;
+  const sort = document.getElementById('sort-by').value;
+
+  let entries = getEntries();
+
+  // Stats
+  const totalEntries = entries.length;
+  const langs = [...new Set(entries.map(e => e.lang))].length;
+  const avgRating = entries.filter(e => e.rating).length
+    ? (entries.reduce((s, e) => s + (e.rating || 0), 0) / entries.filter(e => e.rating).length).toFixed(1)
+    : '—';
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${totalEntries}</div><div class="stat-label">Total entries</div></div>
+    <div class="stat-box"><div class="stat-num">${langs}</div><div class="stat-label">Languages</div></div>
+    <div class="stat-box"><div class="stat-num">${avgRating}</div><div class="stat-label">Avg rating</div></div>`;
+
+  if (q) entries = entries.filter(e => e.title.toLowerCase().includes(q));
+  if (lang) entries = entries.filter(e => e.lang === lang);
+  if (type) entries = entries.filter(e => e.type === type);
+
+  if (sort === 'date-asc') entries.sort((a, b) => a.savedAt.localeCompare(b.savedAt));
+  else if (sort === 'rating-desc') entries.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  else if (sort === 'title-asc') entries.sort((a, b) => a.title.localeCompare(b.title));
+
+  const list = document.getElementById('entries-list');
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="big">🎬</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:6px">${totalEntries === 0 ? 'No entries yet' : 'No matches'}</div>
+      <div style="font-size:14px">${totalEntries === 0 ? 'Hit "+ New entry" to log your first movie or show!' : 'Try a different search or filter'}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = entries.map(e => {
+    const emoji = { Movie:'🎬', Series:'📺', Episode:'📺', Documentary:'🎥' }[e.type] || '🎬';
+    const badgeClass = { English:'badge-en', Tamil:'badge-ta', Hindi:'badge-hi' }[e.lang] || 'badge-other';
+    const stars = e.rating ? '★'.repeat(e.rating) : '';
+    return `<div class="entry-card" onclick="viewEntry('${e.id}')">
+      <div class="entry-thumb">${emoji}</div>
+      <div class="entry-main">
+        <div class="entry-title">${e.title}</div>
+        <div class="entry-meta">
+          <span class="badge ${badgeClass}">${e.lang}</span>
+          <span>${e.type}${e.genre ? ' · ' + e.genre : ''}</span>
+          ${e.date ? '<span>' + e.date + '</span>' : ''}
+          ${stars ? '<span class="stars-display">' + stars + '</span>' : ''}
+        </div>
+        ${e.plot ? '<div style="font-size:13px;color:var(--muted);margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical">' + e.plot.substring(0, 120) + '</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+renderEntries();
+</script>
+</body>
+</html>
