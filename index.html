@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineJournal</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f4f0; --card: #ffffff; --border: #e0ddd6; --border2: #ccc9c0;
+    --text: #1a1a18; --muted: #6b6960; --hint: #a09d94;
+    --green: #3b6d11; --green-light: #eaf3de; --green-mid: #639922;
+    --purple: #534ab7; --purple-light: #eeedfe;
+    --amber: #ba7517; --amber-light: #faeeda;
+    --red: #a32d2d; --red-light: #fcebeb;
+    --radius: 10px; --radius-sm: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18; --card: #232320; --border: #35342f; --border2: #4a4940;
+      --text: #e8e6de; --muted: #9c9a90; --hint: #6b6960;
+      --green: #97c459; --green-light: #1a2a0a; --green-mid: #639922;
+      --purple: #afa9ec; --purple-light: #1a1830;
+      --amber: #ef9f27; --amber-light: #2a1e08;
+      --red: #f09595; --red-light: #2a0f0f;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  /* AUTH PAGE */
+  .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 32px; width: 100%; max-width: 380px; }
+  .auth-logo { text-align: center; margin-bottom: 24px; }
+  .auth-logo div { font-size: 36px; margin-bottom: 8px; }
+  .auth-logo h1 { font-size: 22px; font-weight: 700; color: var(--green); }
+  .auth-logo p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border2); border-radius: var(--radius-sm); overflow: hidden; }
+  .auth-tab { flex: 1; padding: 9px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--bg); color: var(--muted); border: none; font-family: inherit; transition: all 0.15s; }
+  .auth-tab.active { background: var(--green); color: #fff; }
+  .auth-error { background: var(--red-light); color: var(--red); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .auth-success { background: var(--green-light); color: var(--green); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; margin-bottom: 14px; display: none; }
+
+  /* NAV */
+  nav { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; height: 52px; gap: 8px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-weight: 700; font-size: 16px; color: var(--green); flex: 1; display: flex; align-items: center; gap: 6px; }
+  .nav-user { font-size: 13px; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* BUTTONS */
+  .btn { padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--card); color: var(--text); font-size: 14px; cursor: pointer; font-family: inherit; transition: background 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn:hover { background: var(--bg); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-primary:hover { opacity: 0.9; background: var(--green); }
+  .btn-danger { border-color: var(--red); color: var(--red); }
+  .btn-danger:hover { background: var(--red-light); }
+  .btn-full { width: 100%; justify-content: center; padding: 10px; font-size: 15px; }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; max-width: 700px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; }
+
+  /* FIELDS */
+  .field { margin-bottom: 14px; }
+  label.field-label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+  input[type="text"], input[type="email"], input[type="password"], textarea, select {
+    width: 100%; padding: 9px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+    background: var(--card); color: var(--text); font-size: 14px; font-family: inherit; line-height: 1.5; transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--green-mid); }
+  textarea { resize: vertical; min-height: 80px; }
+  .hint { font-size: 12px; color: var(--hint); margin-top: 4px; }
+
+  /* HOME */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .stat-box { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 700; color: var(--green); }
+  .stat-label { font-size: 12px; color: var(--muted); }
+  .home-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap input { padding: 8px 12px 8px 34px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--hint); font-size: 14px; pointer-events: none; }
+  .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filters select { padding: 6px 10px; font-size: 13px; cursor: pointer; width: auto; }
+  .entry-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s; display: flex; align-items: flex-start; gap: 14px; }
+  .entry-card:hover { border-color: var(--border2); }
+  .entry-thumb { width: 44px; height: 44px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; background: var(--green-light); }
+  .entry-main { flex: 1; min-width: 0; }
+  .entry-title { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+  .entry-meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-en { background: var(--purple-light); color: var(--purple); }
+  .badge-ta { background: var(--amber-light); color: var(--amber); }
+  .badge-hi { background: var(--green-light); color: var(--green); }
+  .badge-other { background: var(--border); color: var(--muted); }
+  .stars-display { color: #ef9f27; font-size: 13px; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+
+  /* FORM */
+  .form-section { margin-bottom: 20px; }
+  .form-section h3 { font-size: 13px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .star-picker { display: flex; gap: 6px; margin-top: 4px; }
+  .star-btn { font-size: 24px; cursor: pointer; color: var(--border2); border: none; background: none; padding: 0; line-height: 1; transition: color 0.1s; }
+  .star-btn.on { color: #ef9f27; }
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .page-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* VIEW */
+  .view-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+  .view-thumb { width: 56px; height: 56px; border-radius: var(--radius-sm); background: var(--green-light); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .view-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .view-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .view-section { margin-bottom: 18px; }
+  .view-section h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--hint); margin-bottom: 6px; }
+  .view-section p { font-size: 15px; line-height: 1.7; }
+  .view-section .empty-field { color: var(--hint); font-style: italic; }
+  .view-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+  .copy-box { background: var(--green-light); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 20px; }
+  .copy-box p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+
+  /* LOADING */
+  .loading-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: var(--muted); font-size: 14px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 480px) {
+    .form-row, .form-row3 { grid-template-columns: 1fr; }
+    .stats-row { gap: 6px; }
+    .auth-card { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen" class="loading-screen">
+  <div class="spinner"></div>
+  <div>Loading CineJournal...</div>
+</div>
+
+<!-- AUTH PAGE -->
+<div id="auth-page" style="display:none">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div>🎬</div>
+        <h1>CineJournal</h1>
+        <p>Your English learning movie diary</p>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Log in</button>
+        <button class="auth-tab" onclick="switchTab('signup')">Sign up</button>
+      </div>
+      <div id="auth-error" class="auth-error"></div>
+      <div id="auth-success" class="auth-success"></div>
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input type="email" id="auth-email" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input type="password" id="auth-password" placeholder="Your password" onkeydown="if(event.key==='Enter')handleAuth()">
+      </div>
+      <button class="btn btn-primary btn-full" id="auth-btn" onclick="handleAuth()">Log in</button>
+      <div style="text-align:center;margin-top:14px">
+        <span id="forgot-link" style="font-size:13px;color:var(--muted);cursor:pointer;text-decoration:underline" onclick="forgotPassword()">Forgot password?</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <nav>
+    <div class="nav-logo"><span>🎬</span> CineJournal</div>
+    <span class="nav-user" id="nav-user-email"></span>
+    <button class="btn" onclick="showPage('home')">All entries</button>
+    <button class="btn btn-primary" onclick="showPage('form'); resetForm()">+ New</button>
+    <button class="btn" onclick="signOut()" title="Sign out">↩</button>
+  </nav>
+
+  <!-- HOME PAGE -->
+  <div id="page-home" class="page active">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="home-header">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search by title..." oninput="renderEntries()">
+      </div>
+    </div>
+    <div class="filters">
+      <select id="filter-lang" onchange="renderEntries()">
+        <option value="">All languages</option>
+        <option value="English">English</option>
+        <option value="Tamil">Tamil</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Other">Other</option>
+      </select>
+      <select id="filter-type" onchange="renderEntries()">
+        <option value="">All types</option>
+        <option value="Movie">Movie</option>
+        <option value="Series">Series</option>
+        <option value="Episode">Episode</option>
+        <option value="Documentary">Documentary</option>
+      </select>
+      <select id="sort-by" onchange="renderEntries()">
+        <option value="date-desc">Newest first</option>
+        <option value="date-asc">Oldest first</option>
+        <option value="rating-desc">Highest rated</option>
+        <option value="title-asc">A → Z</option>
+      </select>
+    </div>
+    <div id="entries-list"></div>
+  </div>
+
+  <!-- FORM PAGE -->
+  <div id="page-form" class="page">
+    <div class="page-title" id="form-title">📝 New entry</div>
+    <input type="hidden" id="edit-id">
+    <div class="card">
+      <div class="form-section">
+        <h3>Basic info</h3>
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Title *</label>
+            <input type="text" id="f-title" placeholder="e.g. The Dark Knight">
+          </div>
+          <div class="field">
+            <label class="field-label">Language</label>
+            <select id="f-lang">
+              <option value="English">English</option>
+              <option value="Tamil">Tamil</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row3">
+          <div class="field">
+            <label class="field-label">Type</label>
+            <select id="f-type">
+              <option>Movie</option><option>Series</option><option>Episode</option><option>Documentary</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Genre</label>
+            <input type="text" id="f-genre" placeholder="e.g. Thriller">
+          </div>
+          <div class="field">
+            <label class="field-label">Date watched</label>
+            <input type="text" id="f-date" placeholder="e.g. 9 June 2026">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Your rating</label>
+          <div class="star-picker" id="star-picker">
+            <button class="star-btn" data-v="1" onclick="setRating(1)">★</button>
+            <button class="star-btn" data-v="2" onclick="setRating(2)">★</button>
+            <button class="star-btn" data-v="3" onclick="setRating(3)">★</button>
+            <button class="star-btn" data-v="4" onclick="setRating(4)">★</button>
+            <button class="star-btn" data-v="5" onclick="setRating(5)">★</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="form-section">
+        <h3>Your writing (in English)</h3>
+        <div class="field">
+          <label class="field-label">Plot summary — in your own words</label>
+          <textarea id="f-plot" rows="4" placeholder="Write what the movie/episode was about. Don't copy from Google — use your own words!"></textarea>
+          <p class="hint">This is the most important part for improving your English.</p>
+        </div>
+        <div class="field">
+          <label class="field-label">Your opinion &amp; reaction</label>
+          <textarea id="f-opinion" rows="3" placeholder="What did you like or dislike? How did it make you feel?"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="form-section">
+        <h3>Vocabulary &amp; phrases</h3>
+        <div class="field">
+          <label class="field-label">New English words you noticed</label>
+          <textarea id="f-words" rows="3" placeholder="Word — meaning — example sentence&#10;e.g. redemption — being saved from a bad past — &quot;His redemption arc was powerful.&quot;"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Useful phrase or dialogue</label>
+          <textarea id="f-phrase" rows="2" placeholder='e.g. "Could this BE any more obvious?" — sarcastic emphasis'></textarea>
+          <p class="hint">Especially useful for Friends / sitcoms — one good phrase per episode adds up fast!</p>
+        </div>
+        <div class="field">
+          <label class="field-label">What I want to improve next time</label>
+          <input type="text" id="f-improve" placeholder="e.g. I want to use more descriptive adjectives next time">
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 Save entry</button>
+      <button class="btn" onclick="showPage('home')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- VIEW PAGE -->
+  <div id="page-view" class="page">
+    <div class="view-actions">
+      <button class="btn" onclick="showPage('home')">← Back</button>
+      <button class="btn" onclick="editEntry()">✏️ Edit</button>
+      <button class="btn btn-danger" onclick="deleteEntry()">🗑 Delete</button>
+    </div>
+    <div id="view-content"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBBst3niqTAbCA8KgAcyO2OEicvCX3JLPc",
+  authDomain: "cinejournal-11e8d.firebaseapp.com",
+  projectId: "cinejournal-11e8d",
+  storageBucket: "cinejournal-11e8d.firebasestorage.app",
+  messagingSenderId: "594324653613",
+  appId: "1:594324653613:web:c842b39ab71e0c419adaa4"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let allEntries = [];
+let currentViewId = null;
+let currentRating = 0;
+let currentTab = 'login';
+
+// AUTH STATE
+onAuthStateChanged(auth, user => {
+  document.getElementById('loading-screen').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-page').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('nav-user-email').textContent = user.email;
+    loadEntries();
+  } else {
+    currentUser = null;
+    document.getElementById('auth-page').style.display = 'block';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+// AUTH FUNCTIONS
+window.switchTab = (tab) => {
+  currentTab = tab;
+  document.querySelectorAll('.auth-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+  });
+  document.getElementById('auth-btn').textContent = tab === 'login' ? 'Log in' : 'Create account';
+  document.getElementById('forgot-link').style.display = tab === 'login' ? 'inline' : 'none';
+  hideAuthMessages();
+};
+
+window.handleAuth = async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const btn = document.getElementById('auth-btn');
+  if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
+  btn.disabled = true;
+  btn.textContent = currentTab === 'login' ? 'Logging in...' : 'Creating account...';
+  try {
+    if (currentTab === 'login') {
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      await createUserWithEmailAndPassword(auth, email, password);
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = currentTab === 'login' ? 'Log in' : 'Create account';
+    const msgs = {
+      'auth/user-not-found': 'No account found with this email.',
+      'auth/wrong-password': 'Incorrect password.',
+      'auth/invalid-credential': 'Incorrect email or password.',
+      'auth/email-already-in-use': 'An account with this email already exists.',
+      'auth/weak-password': 'Password must be at least 6 characters.',
+      'auth/invalid-email': 'Please enter a valid email address.',
+    };
+    showAuthError(msgs[e.code] || 'Something went wrong. Please try again.');
+  }
+};
+
+window.forgotPassword = async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) { showAuthError('Enter your email above first.'); return; }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showAuthSuccess('Password reset email sent! Check your inbox.');
+  } catch (e) {
+    showAuthError('Could not send reset email. Check the address and try again.');
+  }
+};
+
+window.signOut = async () => {
+  await fbSignOut(auth);
+};
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-success').style.display = 'none';
+}
+function showAuthSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+function hideAuthMessages() {
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+// FIRESTORE
+async function loadEntries() {
+  try {
+    const q = query(collection(db, 'entries'), where('uid', '==', currentUser.uid));
+    const snap = await getDocs(q);
+    allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allEntries.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
+    renderEntries();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+window.saveEntry = async () => {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { alert('Please enter a title!'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = '💾 Saving...';
+
+  const editId = document.getElementById('edit-id').value;
+  const entry = {
+    uid: currentUser.uid, title,
+    lang: document.getElementById('f-lang').value,
+    type: document.getElementById('f-type').value,
+    genre: document.getElementById('f-genre').value.trim(),
+    date: document.getElementById('f-date').value.trim(),
+    rating: currentRating,
+    plot: document.getElementById('f-plot').value.trim(),
+    opinion: document.getElementById('f-opinion').value.trim(),
+    words: document.getElementById('f-words').value.trim(),
+    phrase: document.getElementById('f-phrase').value.trim(),
+    improve: document.getElementById('f-improve').value.trim(),
+    savedAt: new Date().toISOString()
+  };
+
+  try {
+    if (editId) {
+      await updateDoc(doc(db, 'entries', editId), entry);
+      const idx = allEntries.findIndex(e => e.id === editId);
+      if (idx > -1) allEntries[idx] = { id: editId, ...entry };
+    } else {
+      const ref = await addDoc(collection(db, 'entries'), entry);
+      allEntries.unshift({ id: ref.id, ...entry });
+    }
+    btn.disabled = false; btn.textContent = '💾 Save entry';
+    showPage('home');
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '💾 Save entry';
+    alert('Error saving. Please try again.');
+    console.error(e);
+  }
+};
+
+window.deleteEntry = async () => {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  try {
+    await deleteDoc(doc(db, 'entries', currentViewId));
+    allEntries = allEntries.filter(e => e.id !== currentViewId);
+    showPage('home');
+  } catch (e) { alert('Error deleting.'); }
+};
+
+// UI FUNCTIONS
+window.showPage = (name) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'home') renderEntries();
+};
+
+window.setRating = (v) => {
+  currentRating = v;
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.toggle('on', +b.dataset.v <= v));
+};
+
+window.resetForm = () => {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('form-title').textContent = '📝 New entry';
+  ['f-title','f-genre','f-date','f-plot','f-opinion','f-words','f-phrase','f-improve'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-lang').selectedIndex = 0;
+  document.getElementById('f-type').selectedIndex = 0;
+  currentRating = 0; setRating(0);
+};
+
+window.editEntry = () => {
+  const entry = allEntries.find(e => e.id === currentViewId);
+  if (!entry) return;
+  document.getElementById('edit-id').value = entry.id;
+  document.getElementById('form-title').textContent = '✏️ Edit entry';
+  document.getElementById('f-title').value = entry.title || '';
+  document.getElementById('f-lang').value = entry.lang || 'English';
+  document.getElementById('f-type').value = entry.type || 'Movie';
+  document.getElementById('f-genre').value = entry.genre || '';
+  document.getElementById('f-date').value = entry.date || '';
+  document.getElementById('f-plot').value = entry.plot || '';
+  document.getElementById('f-opinion').value = entry.opinion || '';
+  document.getElementById('f-words').value = entry.words || '';
+  document.getElementById('f-phrase').value = entry.phrase || '';
+  document.getElementById('f-improve').value = entry.improve || '';
+  currentRating = entry.rating || 0; setRating(currentRating);
+  showPage('form');
+};
+
+window.viewEntry = (id) => {
+  const entry = allEntries.find(e => e.id === id);
+  if (!entry) return;
+  currentViewId = id;
+  const stars = entry.rating ? '★'.repeat(entry.rating) + '☆'.repeat(5 - entry.rating) : 'No rating';
+  const badgeClass = { English:'badge-en', Tamil:'badge-ta', Hindi:'badge-hi' }[entry.lang] || 'badge-other';
+  const emoji = { Movie:'🎬', Series:'📺', Episode:'📺', Documentary:'🎥' }[entry.type] || '🎬';
+  const section = (title, content) => {
+    const isEmpty = !content || !content.trim();
+    return `<div class="view-section"><h4>${title}</h4>${isEmpty ? '<p class="empty-field">Not filled in</p>' : '<p>' + content.replace(/\n/g,'<br>') + '</p>'}</div>`;
+  };
+  document.getElementById('view-content').innerHTML = `
+    <div class="card">
+      <div class="view-header">
+        <div class="view-thumb">${emoji}</div>
+        <div>
+          <div class="view-title">${entry.title}</div>
+          <div class="view-badges">
+            <span class="badge ${badgeClass}">${entry.lang}</span>
+            <span class="badge badge-other">${entry.type}</span>
+            ${entry.genre ? '<span class="badge badge-other">'+entry.genre+'</span>' : ''}
+            <span class="stars-display">${stars}</span>
+          </div>
+          ${entry.date ? '<div style="font-size:13px;color:var(--muted);margin-top:4px">📅 '+entry.date+'</div>' : ''}
+        </div>
+      </div>
+      ${section('Plot summary', entry.plot)}
+      ${section('Opinion & reaction', entry.opinion)}
+      ${section('New words', entry.words)}
+      ${section('Useful phrase', entry.phrase)}
+      ${section('What to improve', entry.improve)}
+    </div>
+    <div class="copy-box">
+      <p>📋 Copy this entry and paste it in Claude for instant grammar feedback:</p>
+      <button class="btn btn-primary" onclick="copyToClipboard()">Copy entry text</button>
+    </div>`;
+  showPage('view');
+};
+
+window.copyToClipboard = () => {
+  const entry = allEntries.find(e => e.id === currentViewId);
+  if (!entry) return;
+  const stars = entry.rating ? '★'.repeat(entry.rating) : '—';
+  const text = `🎬 MOVIE / SHOW JOURNAL ENTRY\nTitle: ${entry.title||'—'}\nLanguage: ${entry.lang} | Type: ${entry.type} | Genre: ${entry.genre||'—'}\nDate watched: ${entry.date||'—'} | Rating: ${stars}\n\nPLOT SUMMARY:\n${entry.plot||'(not filled)'}\n\nMY OPINION:\n${entry.opinion||'(not filled)'}\n\nNEW WORDS:\n${entry.words||'(none noted)'}\n\nUSEFUL PHRASE:\n${entry.phrase||'(none noted)'}\n\nWHAT I WANT TO IMPROVE:\n${entry.improve||'(not filled)'}\n\n---\nPlease check my English in this journal entry. Correct any grammar mistakes, suggest better vocabulary where possible, and tell me what I did well and what to improve.`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = 'Copy entry text', 2000);
+  });
+};
+
+window.renderEntries = () => {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const lang = document.getElementById('filter-lang').value;
+  const type = document.getElementById('filter-type').value;
+  const sort = document.getElementById('sort-by').value;
+  let entries = [...allEntries];
+  const total = entries.length;
+  const langs = [...new Set(entries.map(e => e.lang))].length;
+  const avgRating = entries.filter(e => e.rating).length
+    ? (entries.reduce((s,e) => s+(e.rating||0),0) / entries.filter(e=>e.rating).length).toFixed(1) : '—';
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-label">Total entries</div></div>
+    <div class="stat-box"><div class="stat-num">${langs}</div><div class="stat-label">Languages</div></div>
+    <div class="stat-box"><div class="stat-num">${avgRating}</div><div class="stat-label">Avg rating</div></div>`;
+  if (q) entries = entries.filter(e => e.title.toLowerCase().includes(q));
+  if (lang) entries = entries.filter(e => e.lang === lang);
+  if (type) entries = entries.filter(e => e.type === type);
+  if (sort === 'date-asc') entries.sort((a,b) => (a.savedAt||'').localeCompare(b.savedAt||''));
+  else if (sort === 'rating-desc') entries.sort((a,b) => (b.rating||0)-(a.rating||0));
+  else if (sort === 'title-asc') entries.sort((a,b) => a.title.localeCompare(b.title));
+  const list = document.getElementById('entries-list');
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state"><div class="big">🎬</div><div style="font-size:16px;font-weight:600;margin-bottom:6px">${total===0?'No entries yet':'No matches'}</div><div style="font-size:14px">${total===0?'Hit "+ New" to log your first movie or show!':'Try a different search or filter'}</div></div>`;
+    return;
+  }
+  list.innerHTML = entries.map(e => {
+    const emoji = {Movie:'🎬',Series:'📺',Episode:'📺',Documentary:'🎥'}[e.type]||'🎬';
+    const badgeClass = {English:'badge-en',Tamil:'badge-ta',Hindi:'badge-hi'}[e.lang]||'badge-other';
+    const stars = e.rating ? '★'.repeat(e.rating) : '';
+    return `<div class="entry-card" onclick="viewEntry('${e.id}')">
+      <div class="entry-thumb">${emoji}</div>
+      <div class="entry-main">
+        <div class="entry-title">${e.title}</div>
+        <div class="entry-meta">
+          <span class="badge ${badgeClass}">${e.lang}</span>
+          <span>${e.type}${e.genre?' · '+e.genre:''}</span>
+          ${e.date?'<span>'+e.date+'</span>':''}
+          ${stars?'<span class="stars-display">'+stars+'</span>':''}
+        </div>
+        ${e.plot?'<div style="font-size:13px;color:var(--muted);margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical">'+e.plot.substring(0,120)+'</div>':''}
+      </div>
+    </div>`;
+  }).join('');
+};
+</script>
+</body>
+</html>
